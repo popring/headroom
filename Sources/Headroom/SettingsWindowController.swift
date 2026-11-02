@@ -26,6 +26,9 @@ final class SettingsWindowController: NSWindowController {
     private let pollField = NSTextField()
     private let pollStepper = NSStepper()
     private let languagePopup = NSPopUpButton()
+    // cswap auto-switch settings; stored in cswap's own settings.json (see CswapAuto.Config).
+    private let autoThresholdField = NSTextField()
+    private let autoThresholdStepper = NSStepper()
     // Not in config.json: the system's login-item list is the source of truth (the user
     // can also toggle it in System Settings), so the checkbox reads/writes SMAppService directly.
     private let launchAtLoginCheck = NSButton(checkboxWithTitle: L("开机时自动启动", "Launch at login"),
@@ -110,6 +113,24 @@ final class SettingsWindowController: NSWindowController {
         pollRow.orientation = .horizontal
         pollField.widthAnchor.constraint(equalToConstant: 60).isActive = true
 
+        let thresholdFormatter = NumberFormatter()
+        thresholdFormatter.minimum = 50
+        thresholdFormatter.maximum = 99
+        thresholdFormatter.allowsFloats = false
+        autoThresholdField.formatter = thresholdFormatter
+        autoThresholdStepper.minValue = 50
+        autoThresholdStepper.maxValue = 99
+        autoThresholdStepper.increment = 1
+        autoThresholdStepper.target = self
+        autoThresholdStepper.action = #selector(autoThresholdStepped)
+        autoThresholdField.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        let thresholdRow = NSStackView(views: [
+            autoThresholdField, autoThresholdStepper,
+            smallLabel(L("%，5h / 7d / 单模型（如 Fable）任一到线就切",
+                         "%, switch when 5h / 7d / any per-model limit (e.g. Fable) reaches it")),
+        ])
+        thresholdRow.orientation = .horizontal
+
         let addTeam = NSButton(title: L("添加 Claude team…", "Add Claude Team…"),
                                target: self, action: #selector(addTeamClicked))
         addTeam.controlSize = .small
@@ -177,6 +198,7 @@ final class SettingsWindowController: NSWindowController {
             [gridLabel(L("网关地址", "Gateway URL")), baseURLField],
             [gridLabel(L("网关 API Key", "Gateway API Key")), apiKeyRow],
             [gridLabel(L("轮询间隔", "Poll Interval")), pollRow],
+            [gridLabel(L("切号阈值", "Switch At")), thresholdRow],
             [gridLabel(L("界面语言", "Language")), languagePopup],
             [gridLabel(L("开机自启", "Startup")), launchAtLoginCheck],
         ])
@@ -288,6 +310,10 @@ final class SettingsWindowController: NSWindowController {
         launchAtLoginCheck.state = SMAppService.mainApp.status == .enabled ? .on : .off
         // Plain `swift run` has no .app bundle to register as a login item.
         launchAtLoginCheck.isEnabled = Bundle.main.bundleIdentifier != nil
+        autoThresholdField.integerValue = CswapAuto.threshold
+        autoThresholdStepper.integerValue = CswapAuto.threshold
+        autoThresholdField.isEnabled = CswapAuto.isInstalled
+        autoThresholdStepper.isEnabled = CswapAuto.isInstalled
         litellmToggled()
     }
 
@@ -313,8 +339,12 @@ final class SettingsWindowController: NSWindowController {
                              "The directory the claude command uses by default; changes as you switch teams in the terminal")
         }
 
+        // Same name the menu would use: a config alias, else the alias of the cswap slot
+        // on the same org, else the org. Never the email.
+        let swapTwin = ProviderRegistry.readAllAccounts()
+            .first { $0.providerID == "claude-swap" && $0.sameOrg(as: account) }
         let detailText = account.isLoggedIn
-            ? [account.org, account.email].compactMap { $0 }.joined(separator: " · ")
+            ? (Settings.shared.aliases[account.key] ?? swapTwin?.alias ?? account.org ?? "")
             : L("未登录", "Not logged in")
         let detail = smallLabel(detailText)
         detail.lineBreakMode = .byTruncatingTail
@@ -377,6 +407,10 @@ final class SettingsWindowController: NSWindowController {
 
     @objc private func pollStepped() {
         pollField.integerValue = pollStepper.integerValue
+    }
+
+    @objc private func autoThresholdStepped() {
+        autoThresholdField.integerValue = autoThresholdStepper.integerValue
     }
 
     /// Guided team add: pick a name → open Terminal to log in → appears in the menu once
@@ -583,6 +617,9 @@ final class SettingsWindowController: NSWindowController {
                 ]],
                 pollMinutes: max(5, pollField.integerValue),
                 language: ["auto", "zh", "en"][max(0, languagePopup.indexOfSelectedItem)])
+            if CswapAuto.isInstalled {
+                try CswapAuto.setThreshold(min(99, max(50, autoThresholdField.integerValue)))
+            }
         } catch {
             let alert = NSAlert()
             alert.alertStyle = .warning

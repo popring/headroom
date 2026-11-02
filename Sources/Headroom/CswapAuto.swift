@@ -31,7 +31,7 @@ enum CswapAuto {
     static func start() {
         guard enabled, !isRunning, !runningElsewhere else { return }
         // --json: one event per line; unbuffered, or Python holds them in an 8 KB block buffer.
-        let proc = CLI.process(["cswap", "auto", "--json"], env: ["PYTHONUNBUFFERED": "1"])
+        let proc = CLI.process(["cswap", "auto", "--json"] + modelArgs, env: ["PYTHONUNBUFFERED": "1"])
         let pipe = Pipe()
         proc.standardOutput = pipe
         var pending = Data()
@@ -118,9 +118,44 @@ enum CswapAuto {
         return f.date(from: s)
     }
 
+    /// Waits for the exit, so a restart's `runningElsewhere` check can't see the old engine.
     static func stop() {
-        process?.terminationHandler = nil
-        process?.terminate()
+        guard let proc = process else { return }
+        proc.terminationHandler = nil
+        if proc.isRunning { proc.terminate(); proc.waitUntilExit() }
         process = nil
+    }
+
+    // MARK: - cswap's own auto-switch settings (the panel edits them; cswap stays the owner)
+
+    private static var backupRoot: URL { AppHome.url.appendingPathComponent(".claude-swap-backup") }
+    static var isInstalled: Bool { FileManager.default.fileExists(atPath: backupRoot.path) }
+
+    private static var autoSettings: [String: Any]? {
+        let data = try? Data(contentsOf: backupRoot.appendingPathComponent("settings.json"))
+        let root = data.flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] }
+        return root?["autoswitch"] as? [String: Any]
+    }
+
+    static var threshold: Int {
+        Int(((autoSettings?["threshold"] as? NSNumber)?.doubleValue ?? 90).rounded())
+    }
+
+    /// Per-model weekly windows count by default; a model list set in cswap
+    /// (`cswap config set autoswitch.model Fable`) takes over.
+    private static var modelArgs: [String] {
+        (autoSettings?["model"] as? String)?.isEmpty == false ? [] : ["--model", "all"]
+    }
+
+    /// Writes through `cswap config` (it owns validation), then restarts our engine —
+    /// cswap reads its settings only at startup.
+    static func setThreshold(_ value: Int) throws {
+        guard value != threshold else { return }
+        guard CLI.run(["cswap", "config", "set", "autoswitch.threshold", "\(value)"], timeout: 15) else {
+            throw NSError(domain: "Headroom", code: 1, userInfo: [NSLocalizedDescriptionKey: L(
+                "cswap 配置没写进去，在终端跑 cswap config 看原因",
+                "cswap rejected the setting; run cswap config in a terminal to see why")])
+        }
+        if isRunning { stop(); start() }
     }
 }
