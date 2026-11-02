@@ -20,11 +20,12 @@ enum CswapAuto {
     static var isRunning: Bool { process?.isRunning == true }
 
     /// A terminal `cswap auto` or cswap's own menu bar app would race ours over the
-    /// active slot; leave the job to it rather than run two engines. Matched on the
-    /// installed script path, so a shell whose command line merely mentions
-    /// "cswap auto" (an editor, a grep) doesn't count.
+    /// active slot; leave the job to it rather than run two engines. Anchored on
+    /// "python <script> auto", so a shell whose command line merely mentions
+    /// "cswap auto" (a grep, an editor) doesn't count.
     static var runningElsewhere: Bool {
-        !isRunning && CLI.run(["pgrep", "-f", "bin/(cswap|claude-swap) (auto|menubar)"], timeout: 5)
+        !isRunning && CLI.run(["pgrep", "-f", "^[^ ]*python[^ ]* [^ ]*/(cswap|claude-swap) (auto|menubar)"],
+                              timeout: 5)
     }
 
     static func start() {
