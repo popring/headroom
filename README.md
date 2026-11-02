@@ -38,14 +38,13 @@ Launch at login: Settings panel → Startup (or System Settings → General → 
 
 ## Configuration
 
-Menu → **Settings…** (⌘,) opens the panel: source toggles, LiteLLM gateway URL and API key, poll interval, menu bar prefix, UI language, and **one-click Add Claude Team**. Changes apply immediately, no restart.
+Menu → **Settings…** (⌘,) opens the panel: source toggles, LiteLLM gateway URL and API key, poll interval, UI language, and **one-click Add Claude Team**. Changes apply immediately, no restart.
 
 Behind the panel sits `~/.config/headroom/config.json` (respects `XDG_CONFIG_HOME`; auto-generated on first run with `0600` permissions). Hand-editing works too — **changes apply on save** (the file is watched; nothing to click):
 
 ```json
 {
   "pollMinutes": 20,
-  "menuBarPrefix": "AI",
   "language": "auto",
   "providers": {
     "claude-code": { "enabled": true },

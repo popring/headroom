@@ -79,6 +79,8 @@ struct Account {
 
     /// claude-swap only: whether this is the slot cswap is currently switched to.
     var isLiveSwapSlot = false
+    /// claude-swap only: the short name set with `cswap alias`.
+    var alias: String?
 
     var isLoggedIn = false
     var org: String?

@@ -187,24 +187,42 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         (visibleAccounts.first { $0.key == pinnedKey }) ?? followedAccount
     }
 
+    /// Menu bar label: the product (Claude / Codex / LiteLLM), or — when that product has
+    /// several accounts on show — the account itself, so "which one am I on" reads at a glance.
+    /// Account name: cswap alias → team dir suffix (`.claude-meshy` → meshy) → org.
+    private func barName(_ account: Account) -> String {
+        let isClaude = { (a: Account) in a.providerID.hasPrefix("claude-") }
+        let product = isClaude(account) ? "Claude"
+            : ProviderRegistry.all.first { $0.id == account.providerID }?.displayName ?? account.label
+        let siblings = visibleAccounts.filter {
+            isClaude(account) ? isClaude($0) : $0.providerID == account.providerID
+        }
+        guard siblings.count > 1 else { return product }
+        let dirSuffix = account.label.hasPrefix(".claude-") ? String(account.label.dropFirst(8)) : nil
+        let name = account.alias ?? dirSuffix ?? account.org ?? account.label
+        return name.count > 14 ? name.prefix(13) + "…" : name
+    }
+
     /// By default show the tightest window across all accounts; if pinned/followed, only that one.
     private func updateTitle() {
         // The pinned account may have logged out or been disabled in config; fall back to follow/auto.
         let pinned = visibleAccounts.first { $0.key == pinnedKey }
         let focused = pinned ?? followedAccount
-        let worst = focused.map { [$0] } ?? visibleAccounts
-        let window = worst.compactMap(\.tightestWindow).max { $0.percent < $1.percent }
+        let owner = focused ?? visibleAccounts.max {
+            ($0.tightestWindow?.percent ?? -1) < ($1.tightestWindow?.percent ?? -1)
+        }
+        let window = owner?.tightestWindow
         statusItem.button?.toolTip = pinned.map { "\(L("已固定：", "Pinned: "))\($0.org ?? $0.label)" }
             ?? followedAccount.map { "\(L("跟随：", "Following: "))\($0.org ?? $0.label)" }
 
-        let prefix = Settings.shared.menuBarPrefix
+        let name = owner.map(barName) ?? "Headroom"
         let text: String
         if isRefreshing {
-            text = "\(prefix) …"
+            text = "\(name) …"
         } else if let window {
-            text = "\(prefix) \(Int(window.percent.rounded()))%"
+            text = "\(name) \(Int(window.percent.rounded()))%"
         } else {
-            text = "\(prefix) —"
+            text = "\(name) —"
         }
 
         let color: NSColor = {

@@ -30,8 +30,8 @@ struct ClaudeSwapProvider: UsageProvider {
         // behind. Such a ghost shares an org with the slot that replaced it and sits
         // earlier in slot order, so same-org lookups (follow, dedupe) land on it: a dead
         // row with an old error, and a frozen "data Nd ago". Trust sequence.json's roster.
-        let known: Set<String>? = (Self.json(Self.liveStateFile)?["accounts"] as? [String: Any])
-            .map { Set($0.keys) }
+        let roster = Self.json(Self.liveStateFile)?["accounts"] as? [String: [String: Any]]
+        let known: Set<String>? = roster.map { Set($0.keys) }
 
         return slots.keys
             .filter { known?.contains($0) ?? true }
@@ -42,6 +42,7 @@ struct ClaudeSwapProvider: UsageProvider {
                                       label: L("槽位 \(slot)", "Slot \(slot)"))
                 account.isLoggedIn = true
                 account.isLiveSwapSlot = slot == liveSlot
+                account.alias = roster?[slot]?["alias"] as? String
                 account.email = raw["email"] as? String
                 account.orgUuid = raw["organizationUuid"] as? String
                 let profile = account.orgUuid.flatMap { profiles[$0] }

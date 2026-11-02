@@ -21,7 +21,6 @@ struct Settings {
 
     var providers: [String: ProviderSettings]
     var pollMinutes: Int
-    var menuBarPrefix: String
     /// UI language: "auto" (follow system) / "zh" / "en".
     var language: String
 
@@ -73,13 +72,12 @@ struct Settings {
         return Settings(
             providers: providers,
             pollMinutes: max(1, root["pollMinutes"] as? Int ?? defaults.pollMinutes),
-            menuBarPrefix: root["menuBarPrefix"] as? String ?? defaults.menuBarPrefix,
             language: root["language"] as? String ?? defaults.language)
     }
 
     /// Default poll: 20 min. Opening the menu refreshes anyway, so background polling is a
     /// fallback — but polling too rarely leaves the menu-bar number stale for long stretches.
-    static let defaults = Settings(providers: [:], pollMinutes: 20, menuBarPrefix: "AI",
+    static let defaults = Settings(providers: [:], pollMinutes: 20,
                                    language: "auto")
 
     // MARK: - Saving (settings panel)
@@ -91,14 +89,13 @@ struct Settings {
     static func save(providerEnabled: [String: Bool],
                      providerOptions: [String: [String: String]],
                      pollMinutes: Int,
-                     menuBarPrefix: String,
                      language: String) throws {
         var root = (try? Data(contentsOf: path))
             .flatMap { (try? JSONSerialization.jsonObject(with: $0)) as? [String: Any] } ?? [:]
 
         // Floor of 5: /usage only re-fetches roughly every 5 minutes, so polling more often is wasted.
         root["pollMinutes"] = max(5, pollMinutes)
-        root["menuBarPrefix"] = menuBarPrefix
+        root.removeValue(forKey: "menuBarPrefix")   // retired: the menu bar now names the account itself
         root["language"] = language
 
         var providers = root["providers"] as? [String: Any] ?? [:]
@@ -143,7 +140,6 @@ struct Settings {
         {
           "_说明": "保存即生效，不用重启。删掉某个来源的 enabled 或设为 false 即可隐藏它。language: auto=跟随系统, zh, en。",
           "pollMinutes": 20,
-          "menuBarPrefix": "AI",
           "language": "auto",
 
           "providers": {
@@ -172,7 +168,6 @@ struct Settings {
         {
           "_note": "Changes apply on save, no restart needed. Set a provider's enabled to false (or delete it) to hide it. language: auto = follow system, zh, en.",
           "pollMinutes": 20,
-          "menuBarPrefix": "AI",
           "language": "auto",
 
           "providers": {

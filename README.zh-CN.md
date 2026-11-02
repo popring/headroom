@@ -38,14 +38,13 @@
 
 ## 配置
 
-菜单 → **设置…**（⌘,）打开配置面板：来源开关、LiteLLM 网关地址与 API Key、轮询间隔、菜单栏前缀、界面语言，以及**一键添加 Claude team**。保存立刻生效，不用重启。
+菜单 → **设置…**（⌘,）打开配置面板：来源开关、LiteLLM 网关地址与 API Key、轮询间隔、界面语言，以及**一键添加 Claude team**。保存立刻生效，不用重启。
 
 面板背后就是 `~/.config/headroom/config.json`（尊重 `XDG_CONFIG_HOME`；首次运行自动生成，权限 `0600`），喜欢手改 JSON 依然可以，**保存即生效**（文件有监听，不用点任何东西）：
 
 ```json
 {
   "pollMinutes": 20,
-  "menuBarPrefix": "AI",
   "language": "auto",
   "providers": {
     "claude-code": { "enabled": true },

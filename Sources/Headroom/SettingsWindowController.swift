@@ -25,7 +25,6 @@ final class SettingsWindowController: NSWindowController {
     private var apiKeyVisible = false
     private let pollField = NSTextField()
     private let pollStepper = NSStepper()
-    private let prefixField = NSTextField()
     private let languagePopup = NSPopUpButton()
     // Not in config.json: the system's login-item list is the source of truth (the user
     // can also toggle it in System Settings), so the checkbox reads/writes SMAppService directly.
@@ -92,7 +91,6 @@ final class SettingsWindowController: NSWindowController {
         apiKeyToggle.target = self
         apiKeyToggle.action = #selector(apiKeyToggleClicked)
         apiKeyToggle.toolTip = L("显示/隐藏明文", "Show/hide plain text")
-        prefixField.placeholderString = "AI"
 
         let pollFormatter = NumberFormatter()
         pollFormatter.minimum = 5
@@ -179,7 +177,6 @@ final class SettingsWindowController: NSWindowController {
             [gridLabel(L("网关地址", "Gateway URL")), baseURLField],
             [gridLabel(L("网关 API Key", "Gateway API Key")), apiKeyRow],
             [gridLabel(L("轮询间隔", "Poll Interval")), pollRow],
-            [gridLabel(L("菜单栏前缀", "Menu Bar Prefix")), prefixField],
             [gridLabel(L("界面语言", "Language")), languagePopup],
             [gridLabel(L("开机自启", "Startup")), launchAtLoginCheck],
         ])
@@ -190,7 +187,6 @@ final class SettingsWindowController: NSWindowController {
         baseURLField.widthAnchor.constraint(equalToConstant: 280).isActive = true
         apiKeyField.widthAnchor.constraint(equalToConstant: 280).isActive = true
         apiKeyPlainField.widthAnchor.constraint(equalToConstant: 280).isActive = true
-        prefixField.widthAnchor.constraint(equalToConstant: 80).isActive = true
 
         let reveal = NSButton(title: L("在 Finder 中显示配置文件", "Reveal Config File in Finder"),
                               target: self, action: #selector(revealClicked))
@@ -284,7 +280,6 @@ final class SettingsWindowController: NSWindowController {
 
         pollField.integerValue = max(5, settings.pollMinutes)
         pollStepper.integerValue = pollField.integerValue
-        prefixField.stringValue = settings.menuBarPrefix
         switch settings.language {
         case "zh": languagePopup.selectItem(at: 1)
         case "en": languagePopup.selectItem(at: 2)
@@ -567,7 +562,6 @@ final class SettingsWindowController: NSWindowController {
         // Commit any in-progress text field edits first.
         window?.makeFirstResponder(nil)
 
-        let prefix = prefixField.stringValue.trimmingCharacters(in: .whitespaces)
         do {
             let service = SMAppService.mainApp
             let wantLogin = launchAtLoginCheck.state == .on
@@ -588,7 +582,6 @@ final class SettingsWindowController: NSWindowController {
                     "apiKey": apiKeyValue.trimmingCharacters(in: .whitespaces),
                 ]],
                 pollMinutes: max(5, pollField.integerValue),
-                menuBarPrefix: prefix.isEmpty ? Settings.defaults.menuBarPrefix : prefix,
                 language: ["auto", "zh", "en"][max(0, languagePopup.indexOfSelectedItem)])
         } catch {
             let alert = NSAlert()
