@@ -124,6 +124,19 @@ if args.contains("--test-alert") {
     exit(0)
 }
 
+/// `--test-auto-switch`: feed fake `cswap auto --json` events through the notification
+/// path (poll → switch, then all-exhausted). Like --test-alert, needs the .app bundle.
+if args.contains("--test-auto-switch") {
+    CswapAuto.handle(["event": "poll", "windowsPct": ["3": ["5h": 12.0, "7d": 60.0, "Fable": 96.0]]])
+    CswapAuto.handle(["event": "switch", "trigger": "proactive", "dryRun": false,
+                      "from": ["number": 3], "to": ["number": 4]])
+    RunLoop.main.run(until: Date().addingTimeInterval(4))
+    CswapAuto.handle(["event": "all-exhausted",
+                      "earliestResetAt": ISO8601DateFormatter().string(from: Date().addingTimeInterval(5400))])
+    RunLoop.main.run(until: Date().addingTimeInterval(3))
+    exit(0)
+}
+
 /// `--desktop-org`: no UI, log Desktop's "current org" fast-path signal.
 /// For debugging why "follow Desktop" didn't jump or jumped late.
 if args.contains("--desktop-org") {

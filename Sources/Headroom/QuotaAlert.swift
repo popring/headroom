@@ -27,6 +27,9 @@ enum QuotaAlert {
         let watched = focused.map { [$0] } ?? all
         for account in watched {
             guard let window = account.tightestWindow, window.percent >= threshold else { continue }
+            // cswap auto switches these itself and says so (CswapAuto); a "consider
+            // switching" nudge would only be noise.
+            if account.providerID == "claude-swap", CswapAuto.isRunning { continue }
 
             let dedupe = "\(account.key)|\(window.kind)|\(window.resetsAt?.timeIntervalSince1970 ?? 0)"
             var alerted = UserDefaults.standard.stringArray(forKey: alertedKey) ?? []
@@ -57,16 +60,21 @@ enum QuotaAlert {
                                   altName, altPct)
         }
 
+        post(id: "quota-\(account.key)",
+             title: String(format: L("%@ 额度快满", "%@ quota almost full"), name), body: body)
+    }
+
+    /// Posts a system notification; same `id` replaces the previous one.
+    static func post(id: String, title: String, body: String) {
+        guard Bundle.main.bundleIdentifier != nil else { return }   // no bundle → no notifications
         let center = UNUserNotificationCenter.current()
         center.requestAuthorization(options: [.alert, .sound]) { granted, _ in
             guard granted else { return }
             let content = UNMutableNotificationContent()
-            content.title = String(format: L("%@ 额度快满", "%@ quota almost full"), name)
+            content.title = title
             content.body = body
             content.sound = .default
-            center.add(UNNotificationRequest(
-                identifier: "quota-\(account.key)",
-                content: content, trigger: nil))
+            center.add(UNNotificationRequest(identifier: id, content: content, trigger: nil))
         }
     }
 }
