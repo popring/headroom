@@ -15,6 +15,20 @@ enum CLI {
     static func run(_ arguments: [String],
                     env overrides: [String: String?] = [:],
                     timeout: TimeInterval) -> Bool {
+        let proc = process(arguments, env: overrides)
+        do { try proc.run() } catch { return false }
+
+        let deadline = Date().addingTimeInterval(timeout)
+        while proc.isRunning && Date() < deadline {
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        if proc.isRunning { proc.terminate(); return false }
+        return proc.terminationStatus == 0
+    }
+
+    /// A configured, not-yet-started child with the fixed-up PATH — for long-running
+    /// helpers (`cswap auto`) that `run`'s watchdog would kill.
+    static func process(_ arguments: [String], env overrides: [String: String?] = [:]) -> Process {
         var env = ProcessInfo.processInfo.environment
         for (key, value) in overrides {
             if let value { env[key] = value } else { env.removeValue(forKey: key) }
@@ -29,16 +43,9 @@ enum CLI {
         proc.environment = env
         proc.currentDirectoryURL = URL(fileURLWithPath: NSTemporaryDirectory())
         // /dev/null rather than a Pipe nobody drains: a chatty child would otherwise
-        // fill the pipe buffer and deadlock against our own watchdog.
+        // fill the pipe buffer and block.
         proc.standardOutput = FileHandle.nullDevice
         proc.standardError = FileHandle.nullDevice
-        do { try proc.run() } catch { return false }
-
-        let deadline = Date().addingTimeInterval(timeout)
-        while proc.isRunning && Date() < deadline {
-            Thread.sleep(forTimeInterval: 0.2)
-        }
-        if proc.isRunning { proc.terminate(); return false }
-        return proc.terminationStatus == 0
+        return proc
     }
 }

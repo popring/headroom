@@ -324,6 +324,22 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                                    + " within seconds. A manually pinned account takes priority.")
         menu.addItem(followItem)
 
+        if accounts.contains(where: { $0.providerID == "claude-swap" }) {
+            var title = L("额度快满时自动切号", "Auto-switch near limits")
+            if CswapAuto.enabled, CswapAuto.runningElsewhere {
+                title += L("（已有其他 cswap 在管）", " (another cswap is handling it)")
+            }
+            let autoItem = NSMenuItem(title: title, action: #selector(autoSwitchClicked),
+                                      keyEquivalent: "")
+            autoItem.target = self
+            autoItem.state = CswapAuto.enabled ? .on : .off
+            autoItem.toolTip = L("后台跑 cswap auto。阈值和要盯的模型在 cswap 里设，"
+                                     + "例：cswap config set autoswitch.model Fable",
+                                 "Runs cswap auto in the background. Threshold and watched models"
+                                     + " live in cswap, e.g. cswap config set autoswitch.model Fable")
+            menu.addItem(autoItem)
+        }
+
         menu.addItem(.separator())
 
         let settingsItem = NSMenuItem(title: L("设置…", "Settings…"),
@@ -376,16 +392,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         header.isEnabled = true
         menu.addItem(header)
 
-        // cswap slots can become the CLI's active account; the follow logic picks up the
-        // switch from sequence.json, so nothing else to update here.
-        if account.providerID == "claude-swap", !account.isLiveSwapSlot {
-            let item = NSMenuItem(title: L("   ⇄ 切到此账号（CLI）", "   ⇄ Switch CLI to this account"),
-                                  action: #selector(switchSlotClicked(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = account.localID
-            item.toolTip = L("等同于 cswap switch \(account.localID)；新开的 claude 会话用这个号",
-                             "Same as cswap switch \(account.localID); new claude sessions use this account")
-            menu.addItem(item)
+        if let slot = swapSlot(for: account) {
+            header.toolTip = L("点击把 Claude Code CLI 切到这个号（cswap switch \(slot.localID)），菜单栏跟着切",
+                               "Click to switch Claude Code CLI to this account (cswap switch \(slot.localID));"
+                                   + " the menu bar follows")
         }
 
         if let error = account.error {
@@ -507,27 +517,45 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
     }
 
-    @objc private func switchSlotClicked(_ sender: NSMenuItem) {
-        guard let slot = sender.representedObject as? String else { return }
+    /// The cswap slot behind a menu row: the row itself, or — since a same-org Claude Code
+    /// dir hides its slot from the menu (see `visibleAccounts`) — the slot it stands in for.
+    private func swapSlot(for account: Account) -> Account? {
+        if account.providerID == "claude-swap" { return account }
+        guard account.providerID == "claude-code" else { return nil }
+        return accounts.first { $0.providerID == "claude-swap" && $0.sameOrg(as: account) }
+    }
+
+    /// Clicking an account makes it the one the menu bar shows. If cswap manages it, that
+    /// means switching the CLI to it — follow then picks the switch up from sequence.json.
+    /// Accounts nothing can switch to (Codex, gateway, a team with no slot) get pinned.
+    @objc private func pinClicked(_ sender: NSMenuItem) {
+        guard let key = sender.representedObject as? String,
+              let account = accounts.first(where: { $0.key == key }) else { return }
+        guard let slot = swapSlot(for: account) else {
+            pinnedKey = pinnedKey == key ? nil : key
+            updateTitle()
+            return
+        }
+        // Let follow show it; with follow off, pin it so the click still lands.
+        pinnedKey = followDesktop ? nil : key
+        updateTitle()
+        guard !slot.isLiveSwapSlot else { return }
         DispatchQueue.global(qos: .userInitiated).async {
-            let ok = CLI.run(["cswap", "switch", slot], timeout: 30)
-            guard !ok else { return }
+            guard !CLI.run(["cswap", "switch", slot.localID], timeout: 30) else { return }
             DispatchQueue.main.async {
                 let alert = NSAlert()
                 alert.alertStyle = .warning
                 alert.messageText = L("切换失败", "Switch Failed")
-                alert.informativeText = L("在终端跑 cswap switch \(slot) 看具体原因",
-                                          "Run cswap switch \(slot) in a terminal to see why")
+                alert.informativeText = L("在终端跑 cswap switch \(slot.localID) 看具体原因",
+                                          "Run cswap switch \(slot.localID) in a terminal to see why")
                 NSApp.activate(ignoringOtherApps: true)
                 alert.runModal()
             }
         }
     }
 
-    @objc private func pinClicked(_ sender: NSMenuItem) {
-        guard let key = sender.representedObject as? String else { return }
-        pinnedKey = pinnedKey == key ? nil : key
-        updateTitle()
+    @objc private func autoSwitchClicked() {
+        CswapAuto.enabled.toggle()
     }
 
     @objc private func followClicked() {

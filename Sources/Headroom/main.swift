@@ -12,6 +12,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         controller = StatusBarController()
         enableLaunchAtLoginOnFirstRun()
+        CswapAuto.start()
+    }
+
+    /// A child process outlives its parent unless told otherwise.
+    func applicationWillTerminate(_ notification: Notification) {
+        CswapAuto.stop()
     }
 
     /// Launch at login defaults to on — once. After that the Settings checkbox / System
