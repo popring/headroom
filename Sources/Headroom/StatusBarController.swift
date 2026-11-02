@@ -297,12 +297,20 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             let providers = ProviderRegistry.all.filter { p in
                 shown.contains { $0.providerID == p.id }
             }
-            for provider in providers {
-                if providers.count > 1 {
-                    menu.addItem(info(provider.displayName.uppercased(), size: 10))
+            // Hierarchy: a separator between groups, the group title flush left in small
+            // tracked caps, and everything in the group indented one level under it.
+            let grouped = providers.count > 1
+            for (index, provider) in providers.enumerated() {
+                if grouped {
+                    if index > 0 { menu.addItem(.separator()) }
+                    menu.addItem(sectionTitle(provider.displayName))
                 }
+                let firstRow = menu.numberOfItems
                 for account in shown where account.providerID == provider.id {
                     addAccount(account)
+                }
+                if grouped {
+                    menu.items[firstRow...].forEach { $0.indentationLevel = 1 }
                 }
             }
         }
@@ -475,6 +483,19 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Display-only row. **Must set `isEnabled = true`** — otherwise AppKit renders it as
     /// disabled (gray/translucent). The menu has autoenablesItems off, so this value isn't
     /// overridden, and having no action means clicking it does nothing anyway.
+    private func sectionTitle(_ text: String) -> NSMenuItem {
+        let item = NSMenuItem(title: text, action: nil, keyEquivalent: "")
+        item.attributedTitle = NSAttributedString(
+            string: text.uppercased(),
+            attributes: [
+                .font: NSFont.systemFont(ofSize: 10, weight: .bold),
+                .kern: 1.2,
+                .foregroundColor: NSColor.tertiaryLabelColor,
+            ])
+        item.isEnabled = false
+        return item
+    }
+
     private func info(_ text: String, size: CGFloat = 12,
                       mono: Bool = false, color: NSColor = .secondaryLabelColor) -> NSMenuItem {
         let item = NSMenuItem(title: text, action: nil, keyEquivalent: "")
