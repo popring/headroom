@@ -18,7 +18,8 @@ You subscribe to Claude Code and Codex, and your company hands you a gateway key
 
 - **Everything in one place**: Claude Code (multiple teams), every account managed by Claude Swap (cswap), Codex, and a self-hosted LiteLLM gateway — one menu covers them all
 - **Follows the account in use**: the menu bar number automatically tracks whichever account is active — switches from Claude Code CLI (incl. claude-swap) and Claude Desktop are picked up within seconds; you can also pin any account manually
-- **cswap compatible**: if you use [claude-swap](https://github.com/realiti4/claude-swap) (cswap), there is nothing to configure — the app reads its usage cache directly, every slot account shows up in the menu, and the currently active slot is marked. Read-only; never touches its credentials
+- **cswap compatible**: if you use [claude-swap](https://github.com/realiti4/claude-swap) (cswap), there is nothing to configure — the app reads its usage cache directly, every slot account shows up in the menu, and the currently active slot is marked. **Click an account to switch the CLI to it** (`cswap switch` under the hood; the menu bar follows). Credentials stay cswap's — the app only calls its commands
+- **Auto-switch near limits**: one menu toggle keeps `cswap auto` running, so once the account in use reaches the threshold on its 5h, 7d or any per-model window (e.g. Fable), it moves to the account with the most headroom — and tells you with a notification. The threshold is set in Settings → **Switch At** (default 90%)
 - **Quota alerts**: a system notification fires when the account you're using approaches its limit — no more discovering it at 100%
 - **Always shows data age**: every reading is labeled with how long ago it was fetched, and anything older than 10 minutes is marked stale — better an honest "3m ago" than fake real-time
 - **Bilingual**: the UI follows your system language (English / Chinese) and can be forced either way in Settings

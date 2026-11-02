@@ -10,7 +10,7 @@ cd "$(dirname "$0")/.."
 
 APP_NAME="Headroom"
 BUNDLE_ID="dev.popring.headroom"
-VERSION="0.6.0"
+VERSION="0.7.0"
 OUT="${1:-build}"
 APP="$OUT/$APP_NAME.app"
 
