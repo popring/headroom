@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 
 /// Menu bar app entry point.
 ///
@@ -10,6 +11,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         controller = StatusBarController()
+        enableLaunchAtLoginOnFirstRun()
+    }
+
+    /// Launch at login defaults to on — once. After that the Settings checkbox / System
+    /// Settings own it, so a user who turned it off never gets it switched back on.
+    /// Only for an installed copy: a build/ folder or a translocated download would
+    /// register a path that later disappears.
+    private func enableLaunchAtLoginOnFirstRun() {
+        let key = "launchAtLoginDefaulted"
+        guard !UserDefaults.standard.bool(forKey: key),
+              Bundle.main.bundlePath.contains("/Applications/") else { return }
+        try? SMAppService.mainApp.register()
+        UserDefaults.standard.set(true, forKey: key)
     }
 }
 
