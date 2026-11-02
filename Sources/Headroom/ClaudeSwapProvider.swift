@@ -64,7 +64,11 @@ struct ClaudeSwapProvider: UsageProvider {
     /// (a slot switch, `cswap auto`, the TUI). Read passively, this source silently
     /// freezes for hours between switches — so drive it instead. `cswap list` re-fetches
     /// every slot and rewrites the cache; it only reads, and never switches slots.
-    func refresh(_ account: Account) -> RefreshResult { Self.collect() }
+    /// While our `cswap auto` runs it keeps the cache fresh on its own budget-aware
+    /// schedule; asking again would only spend the same per-account budget twice.
+    func refresh(_ account: Account) -> RefreshResult {
+        CswapAuto.isRunning ? .updated : Self.collect()
+    }
 
     /// One `cswap list` covers every slot, so the per-account calls of a refresh batch
     /// collapse into a single run; the rest read the cache it just wrote.

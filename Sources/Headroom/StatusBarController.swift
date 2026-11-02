@@ -275,12 +275,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             return !dedicated.contains { $0.sameOrg(as: account) }
         }
         // claude-swap slots and logged-in Claude Code dirs often point at the same orgs.
-        // The dir copy can actively refresh, so it wins on same org; swap only fills in
-        // orgs with no dir login.
-        let fromDirs = stable.filter { $0.providerID == "claude-code" }
+        // The cswap copy wins: cswap already polls the usage endpoint under its own
+        // budget-aware pacing, and a dir copy would spend that same (small, per-account)
+        // budget a second time — refresh only covers visible accounts.
+        let fromSwap = stable.filter { $0.providerID == "claude-swap" }
         return stable.filter { account in
-            guard account.providerID == "claude-swap" else { return true }
-            return !fromDirs.contains { $0.sameOrg(as: account) }
+            guard account.providerID == "claude-code" else { return true }
+            return !fromSwap.contains { $0.sameOrg(as: account) }
         }
     }
 
@@ -422,10 +423,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                                    + " the menu bar follows")
         }
 
+        // A failed fetch with last-known numbers (cswap keeps them through a 429): usage
+        // only rises within a window, so they're a valid lower bound — show them, flagged.
         if let error = account.error {
-            menu.addItem(info("   \(error)", size: 11))
-            addRefreshIssue(for: account)
-            return
+            guard !account.windows.isEmpty else {
+                menu.addItem(info("   \(error)", size: 11))
+                addRefreshIssue(for: account)
+                return
+            }
+            let note = error.contains("429") ? L("限流中", "rate-limited") : error
+            let age = account.cacheAge.map { " · " + L("数据 ", "data ") + Fmt.ago($0) } ?? ""
+            menu.addItem(info("   ⚠ \(note)\(age)", size: 11, color: .systemOrange))
         }
 
         // A team at all zeros has nothing to show; collapse to one line, details in the tooltip.

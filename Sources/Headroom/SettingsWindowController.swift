@@ -156,9 +156,9 @@ final class SettingsWindowController: NSWindowController {
         swapStatus.font = .systemFont(ofSize: NSFont.smallSystemFontSize)
         swapCheck.toolTip = L(
             "读 claude-swap（cswap）录入的账号，无需在本应用重复登录；"
-                + "和 Claude Code 目录同 org 时自动去重，目录那份优先",
+                + "和 Claude Code 目录同 org 时自动去重，用 cswap 这份（省接口额度）",
             "Reads accounts registered via claude-swap (cswap); no need to log in again here. "
-                + "Deduplicated automatically when sharing an org with a Claude Code directory, which takes priority")
+                + "Deduplicated automatically when sharing an org with a Claude Code directory; cswap's copy is used (saves usage-endpoint budget)")
         let swapRow = NSStackView(views: [swapCheck, swapStatus])
         swapRow.orientation = .horizontal
         swapRow.spacing = 8

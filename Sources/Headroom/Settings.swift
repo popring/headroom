@@ -152,7 +152,7 @@ struct Settings {
             },
             "claude-swap": {
               "enabled": true,
-              "_说明": "读 claude-swap（cswap）的 ~/.claude-swap-backup 缓存，无需额外登录。和 Claude Code 目录同 org 时自动去重，目录那份优先。"
+              "_说明": "读 claude-swap（cswap）的 ~/.claude-swap-backup 缓存，无需额外登录。和 Claude Code 目录同 org 时自动去重，用 cswap 这份（省接口额度）。"
             },
             "codex": {
               "enabled": true,
@@ -180,7 +180,7 @@ struct Settings {
             },
             "claude-swap": {
               "enabled": true,
-              "_note": "Reads claude-swap (cswap)'s ~/.claude-swap-backup cache; no extra login. Deduplicated with Claude Code directories sharing an org — the directory wins."
+              "_note": "Reads claude-swap (cswap)'s ~/.claude-swap-backup cache; no extra login. Deduplicated with Claude Code directories sharing an org — cswap's copy wins (saves usage-endpoint budget)."
             },
             "codex": {
               "enabled": true,
