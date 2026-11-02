@@ -62,7 +62,12 @@ enum ProviderRegistry {
     }
 
     static func readAllAccounts() -> [Account] {
-        all.flatMap { $0.readAccounts() }
+        let aliases = Settings.shared.aliases
+        return all.flatMap { $0.readAccounts() }.map { account in
+            var account = account
+            if let alias = aliases[account.key] { account.alias = alias }
+            return account
+        }
     }
 
     /// Refresh the given accounts in parallel (may span sources); callback on the

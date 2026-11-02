@@ -46,6 +46,7 @@ Behind the panel sits `~/.config/headroom/config.json` (respects `XDG_CONFIG_HOM
 {
   "pollMinutes": 20,
   "language": "auto",
+  "aliases": { "codex:codex": "work", "claude-swap:3": "eng" },
   "providers": {
     "claude-code": { "enabled": true },
     "claude-swap": { "enabled": true },
@@ -55,7 +56,7 @@ Behind the panel sits `~/.config/headroom/config.json` (respects `XDG_CONFIG_HOM
 }
 ```
 
-Set `enabled` to `false` to hide a source entirely (it won't even be refreshed). `language` accepts `auto` (follow system) / `zh` / `en`. `pollMinutes` has a floor of 5 — see "Two design trade-offs" below.
+Set `enabled` to `false` to hide a source entirely (it won't even be refreshed). `aliases` renames accounts in the menu and menu bar — handy for hiding emails or org names; keys are the `[...]` tags printed by `--dump`, and cswap slots also pick up `cswap alias`. `language` accepts `auto` (follow system) / `zh` / `en`. `pollMinutes` has a floor of 5 — see "Two design trade-offs" below.
 
 ### Let an AI configure it
 

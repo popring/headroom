@@ -46,6 +46,7 @@
 {
   "pollMinutes": 20,
   "language": "auto",
+  "aliases": { "codex:codex": "work", "claude-swap:3": "eng" },
   "providers": {
     "claude-code": { "enabled": true },
     "claude-swap": { "enabled": true },
@@ -55,7 +56,7 @@
 }
 ```
 
-不想看的来源把 `enabled` 改成 `false`，那一组会整个消失（连刷新都不会跑）。`language` 支持 `auto`（跟随系统）/ `zh` / `en`。`pollMinutes` 下限 5 分钟 —— 原因见下方「两个设计取舍」。
+不想看的来源把 `enabled` 改成 `false`，那一组会整个消失（连刷新都不会跑）。`language` 支持 `auto`（跟随系统）/ `zh` / `en`。`pollMinutes` 下限 5 分钟 —— 原因见下方「两个设计取舍」。`aliases` 给账号改显示名（菜单和菜单栏都生效，适合藏掉邮箱、组织名），key 是 `--dump` 输出里 `[...]` 中的那串；cswap 槽位也会读 `cswap alias`。
 
 ### 让 AI 帮你配置
 

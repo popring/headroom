@@ -39,7 +39,7 @@ enum QuotaAlert {
     }
 
     private static func notify(account: Account, window: LimitWindow, all: [Account]) {
-        let name = account.org ?? account.label
+        let name = account.displayName
 
         // Recommend the other account with the most headroom (same source, logged
         // in, not the focused one).
@@ -50,7 +50,7 @@ enum QuotaAlert {
         var body = String(format: L("%@ 已用 %d%%，重置 %@", "%@ at %d%%, resets %@"),
                           window.displayName, Int(window.percent.rounded()), Fmt.until(window.resetsAt))
         if let alt = alternative {
-            let altName = alt.org ?? alt.label
+            let altName = alt.displayName
             let altPct = Int((alt.tightestWindow?.percent ?? 0).rounded())
             body += "\n" + String(format: L("建议切到 %@（最紧窗口 %d%%），Desktop 切 org 后点开原会话即可",
                                             "Consider switching to %@ (tightest window %d%%) — switch org in Desktop, then reopen the session"),

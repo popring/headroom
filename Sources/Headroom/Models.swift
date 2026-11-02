@@ -79,7 +79,7 @@ struct Account {
 
     /// claude-swap only: whether this is the slot cswap is currently switched to.
     var isLiveSwapSlot = false
-    /// claude-swap only: the short name set with `cswap alias`.
+    /// Short name: `aliases` in config.json, else (claude-swap) the `cswap alias`.
     var alias: String?
 
     var isLoggedIn = false
@@ -99,6 +99,14 @@ struct Account {
     /// old state files may lack the uuid, and comparing keys directly would misread that
     /// as a different org.
     var orgKey: String? { orgUuid ?? org }
+
+    /// Name shown everywhere in the UI: alias → team dir suffix (`.claude-work` → work)
+    /// → org → label. The org is often an email, which an alias keeps off screen.
+    var displayName: String {
+        if let alias { return alias }
+        if providerID == "claude-code", label.hasPrefix(".claude-") { return String(label.dropFirst(8)) }
+        return org ?? label
+    }
 
     /// Same org? Compare uuids only when both sides have one; otherwise fall back to names.
     func sameOrg(as other: Account) -> Bool {

@@ -67,7 +67,7 @@ func runDump(refresh: Bool) -> Never {
             print("\(account.label): \(account.error ?? L("未登录", "not logged in"))")
             continue
         }
-        print("\(account.org ?? account.label)  [\(account.label)]")
+        print("\(account.displayName)  [\(account.key)]")
         if let email = account.email, let tier = account.seatTier {
             // First 8 chars of the org uuid are enough to eyeball; missing means the
             // state file is too old — follow/dedupe falls back to name matching.

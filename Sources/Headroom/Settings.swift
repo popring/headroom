@@ -23,6 +23,8 @@ struct Settings {
     var pollMinutes: Int
     /// UI language: "auto" (follow system) / "zh" / "en".
     var language: String
+    /// Display names keyed by account key (`--dump` prints each key), e.g. "codex:codex".
+    var aliases: [String: String] = [:]
 
     /// Respects XDG_CONFIG_HOME (default ~/.config). Note `homeDirectoryForCurrentUser`
     /// ignores the $HOME env var, so tests can only isolate config via XDG_CONFIG_HOME.
@@ -72,7 +74,8 @@ struct Settings {
         return Settings(
             providers: providers,
             pollMinutes: max(1, root["pollMinutes"] as? Int ?? defaults.pollMinutes),
-            language: root["language"] as? String ?? defaults.language)
+            language: root["language"] as? String ?? defaults.language,
+            aliases: (root["aliases"] as? [String: String] ?? [:]).filter { !$0.value.isEmpty })
     }
 
     /// Default poll: 20 min. Opening the menu refreshes anyway, so background polling is a

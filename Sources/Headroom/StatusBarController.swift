@@ -189,7 +189,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     /// Menu bar label: the product (Claude / Codex / LiteLLM), or — when that product has
     /// several accounts on show — the account itself, so "which one am I on" reads at a glance.
-    /// Account name: cswap alias → team dir suffix (`.claude-meshy` → meshy) → org.
     private func barName(_ account: Account) -> String {
         let isClaude = { (a: Account) in a.providerID.hasPrefix("claude-") }
         let product = isClaude(account) ? "Claude"
@@ -198,8 +197,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             isClaude(account) ? isClaude($0) : $0.providerID == account.providerID
         }
         guard siblings.count > 1 else { return product }
-        let dirSuffix = account.label.hasPrefix(".claude-") ? String(account.label.dropFirst(8)) : nil
-        let name = account.alias ?? dirSuffix ?? account.org ?? account.label
+        let name = account.displayName
         return name.count > 14 ? name.prefix(13) + "…" : name
     }
 
@@ -212,8 +210,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             ($0.tightestWindow?.percent ?? -1) < ($1.tightestWindow?.percent ?? -1)
         }
         let window = owner?.tightestWindow
-        statusItem.button?.toolTip = pinned.map { "\(L("已固定：", "Pinned: "))\($0.org ?? $0.label)" }
-            ?? followedAccount.map { "\(L("跟随：", "Following: "))\($0.org ?? $0.label)" }
+        statusItem.button?.toolTip = pinned.map { "\(L("已固定：", "Pinned: "))\($0.displayName)" }
+            ?? followedAccount.map { "\(L("跟随：", "Following: "))\($0.displayName)" }
 
         let name = owner.map(barName) ?? "Headroom"
         let text: String
@@ -319,7 +317,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         if let age = (fresh.isEmpty ? shown : fresh).compactMap(\.cacheAge).max() {
             var text = L("数据 ", "Data ") + Fmt.ago(age)
             if !stale.isEmpty {
-                let names = stale.map { $0.org ?? $0.label }.joined(separator: ", ")
+                let names = stale.map { $0.displayName }.joined(separator: ", ")
                 text += fresh.isEmpty ? L(" · 已过期", " · stale") : L(" · \(names) 已过期", " · \(names) stale")
             }
             menu.addItem(info(text, size: 11, color: stale.isEmpty ? .tertiaryLabelColor : .systemOrange))
@@ -383,7 +381,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     private func addAccount(_ account: Account) {
         // Header line; append the fallback quota to it to save a row.
-        var title = account.org ?? account.label
+        var title = account.displayName
         if let extra = account.extraUsage, extra.hasBuffer {
             title += extra.isCredits
                 ? String(format: "   %g / %g credits", extra.used, extra.limit)
