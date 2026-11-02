@@ -107,7 +107,7 @@ enum Refresher {
         var request = URLRequest(url: usageURL, timeoutInterval: timeout)
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("oauth-2025-04-20", forHTTPHeaderField: "anthropic-beta")
-        request.setValue("ai-usage-bar", forHTTPHeaderField: "User-Agent")
+        request.setValue("headroom", forHTTPHeaderField: "User-Agent")
 
         var payload: Data?
         var status = 0
@@ -150,7 +150,7 @@ enum Refresher {
 
     private static func cacheFile(_ configDir: URL) -> URL {
         UsageReader.home
-            .appendingPathComponent(".cache/ai-usage-bar/claude")
+            .appendingPathComponent(".cache/headroom/claude")
             .appendingPathComponent(configDir.lastPathComponent + ".json")
     }
 

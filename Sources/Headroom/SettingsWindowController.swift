@@ -1,4 +1,5 @@
 import AppKit
+import ServiceManagement
 
 /// Settings panel. Programmatic AppKit (no full Xcode on this machine, so no xib).
 ///
@@ -26,6 +27,10 @@ final class SettingsWindowController: NSWindowController {
     private let pollStepper = NSStepper()
     private let prefixField = NSTextField()
     private let languagePopup = NSPopUpButton()
+    // Not in config.json: the system's login-item list is the source of truth (the user
+    // can also toggle it in System Settings), so the checkbox reads/writes SMAppService directly.
+    private let launchAtLoginCheck = NSButton(checkboxWithTitle: L("开机时自动启动", "Launch at login"),
+                                              target: nil, action: nil)
     private let addTeamStatus = NSTextField(labelWithString: "")
     private var addTeamStatusRow: NSView!
     private let teamsStack = NSStackView()
@@ -43,7 +48,7 @@ final class SettingsWindowController: NSWindowController {
             contentRect: .zero,
             styleMask: [.titled, .closable],
             backing: .buffered, defer: false)
-        window.title = L("AI Usage Bar 设置", "AI Usage Bar Settings")
+        window.title = L("Headroom 设置", "Headroom Settings")
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.contentView = buildContent()
@@ -176,6 +181,7 @@ final class SettingsWindowController: NSWindowController {
             [gridLabel(L("轮询间隔", "Poll Interval")), pollRow],
             [gridLabel(L("菜单栏前缀", "Menu Bar Prefix")), prefixField],
             [gridLabel(L("界面语言", "Language")), languagePopup],
+            [gridLabel(L("开机自启", "Startup")), launchAtLoginCheck],
         ])
         grid.rowAlignment = .firstBaseline
         grid.column(at: 0).xPlacement = .trailing
@@ -284,6 +290,9 @@ final class SettingsWindowController: NSWindowController {
         case "en": languagePopup.selectItem(at: 2)
         default:   languagePopup.selectItem(at: 0)
         }
+        launchAtLoginCheck.state = SMAppService.mainApp.status == .enabled ? .on : .off
+        // Plain `swift run` has no .app bundle to register as a login item.
+        launchAtLoginCheck.isEnabled = Bundle.main.bundleIdentifier != nil
         litellmToggled()
     }
 
@@ -415,8 +424,8 @@ final class SettingsWindowController: NSWindowController {
         // The prompt text goes inside shell double quotes, so quotes in the English text must be escaped as \\" for the shell.
         let echoIntro = L("为 team「\(name)」登录 Claude Code：跟着提示走，登录时选对应的 team。",
                           "Log in to Claude Code for team \\\"\(name)\\\": follow the prompts and pick the matching team.")
-        let echoOutro = L("登录完成后退出（/exit）并关掉本窗口，AI Usage Bar 会自动发现。",
-                          "After logging in, exit (/exit) and close this window; AI Usage Bar will detect it automatically.")
+        let echoOutro = L("登录完成后退出（/exit）并关掉本窗口，Headroom 会自动发现。",
+                          "After logging in, exit (/exit) and close this window; Headroom will detect it automatically.")
         let script = """
         #!/bin/bash
         export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
@@ -426,7 +435,7 @@ final class SettingsWindowController: NSWindowController {
         claude
         """
         let scriptURL = URL(fileURLWithPath: NSTemporaryDirectory())
-            .appendingPathComponent("ai-usage-bar-login-\(name).command")
+            .appendingPathComponent("headroom-login-\(name).command")
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             try script.write(to: scriptURL, atomically: true, encoding: .utf8)
@@ -560,6 +569,13 @@ final class SettingsWindowController: NSWindowController {
 
         let prefix = prefixField.stringValue.trimmingCharacters(in: .whitespaces)
         do {
+            let service = SMAppService.mainApp
+            let wantLogin = launchAtLoginCheck.state == .on
+            if launchAtLoginCheck.isEnabled, wantLogin != (service.status == .enabled) {
+                if wantLogin { try service.register() } else { try service.unregister() }
+                // macOS may hold a new login item for the user's approval; take them there.
+                if service.status == .requiresApproval { SMAppService.openSystemSettingsLoginItems() }
+            }
             try Settings.save(
                 providerEnabled: [
                     "claude-code": claudeCheck.state == .on,

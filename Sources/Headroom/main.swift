@@ -75,6 +75,8 @@ func runDump(refresh: Bool) -> Never {
     exit(0)
 }
 
+Settings.migrateFromLegacyName()
+
 let args = CommandLine.arguments
 if args.contains("--dump") {
     runDump(refresh: args.contains("--refresh") || args.contains("-r"))
@@ -96,8 +98,8 @@ if args.contains("--test-alert") {
                                resetsAt: nil, isActive: true)]
     UserDefaults.standard.removeObject(forKey: "quotaAlertedKeys")   // don't let dedupe block the test
     QuotaAlert.check(focused: fake, all: [fake, alt])
-    print(L("已触发测试通知（若无横幅：检查系统设置 > 通知 > AI Usage Bar）",
-            "Test notification fired (no banner? check System Settings > Notifications > AI Usage Bar)"))
+    print(L("已触发测试通知（若无横幅：检查系统设置 > 通知 > Headroom）",
+            "Test notification fired (no banner? check System Settings > Notifications > Headroom)"))
     RunLoop.main.run(until: Date().addingTimeInterval(3))
     exit(0)
 }

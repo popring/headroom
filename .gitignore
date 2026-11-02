@@ -4,7 +4,7 @@ build/
 .DS_Store
 *.xcodeproj
 
-# 用户配置里有 API key，绝不能进仓库（正常在 ~/.config/ai-usage-bar/ 下，
+# 用户配置里有 API key，绝不能进仓库（正常在 ~/.config/headroom/ 下，
 # 这里兜底防止有人拷一份到项目根目录调试）
 config.json
 *.zip

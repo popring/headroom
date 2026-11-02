@@ -14,7 +14,7 @@ struct LiteLLMProvider: UsageProvider {
     let displayName = "LiteLLM"
 
     private static let cacheFile = AppHome.url
-        .appendingPathComponent(".cache/ai-usage-bar/litellm.json")
+        .appendingPathComponent(".cache/headroom/litellm.json")
 
     // MARK: - Configuration
 

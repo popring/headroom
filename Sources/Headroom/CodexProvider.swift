@@ -21,7 +21,7 @@ struct CodexProvider: UsageProvider {
 
     private static let home = AppHome.url
     private static let authFile = home.appendingPathComponent(".codex/auth.json")
-    private static let cacheFile = home.appendingPathComponent(".cache/ai-usage-bar/codex.json")
+    private static let cacheFile = home.appendingPathComponent(".cache/headroom/codex.json")
     private static let usageURL = URL(string: "https://chatgpt.com/backend-api/wham/usage")!
 
     /// Login status for the settings panel. Same criterion as readAccounts: auth.json exists.
@@ -135,7 +135,7 @@ struct CodexProvider: UsageProvider {
         if let accountID = tokens["account_id"] as? String {
             request.setValue(accountID, forHTTPHeaderField: "chatgpt-account-id")
         }
-        request.setValue("ai-usage-bar", forHTTPHeaderField: "User-Agent")
+        request.setValue("headroom", forHTTPHeaderField: "User-Agent")
 
         var payload: Data?
         var status = 0

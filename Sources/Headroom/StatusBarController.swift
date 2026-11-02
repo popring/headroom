@@ -340,7 +340,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
 
-        menu.addItem(info("AI Usage Bar \(AppInfo.version)", size: 11, color: .tertiaryLabelColor))
+        menu.addItem(info("Headroom \(AppInfo.version)", size: 11, color: .tertiaryLabelColor))
 
         let quit = NSMenuItem(title: L("退出", "Quit"), action: #selector(quitClicked), keyEquivalent: "q")
         quit.target = self
@@ -481,7 +481,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         ]
 
         let file = AppHome.url
-            .appendingPathComponent(".cache/ai-usage-bar")
+            .appendingPathComponent(".cache/headroom")
             .appendingPathComponent("relogin\(dirName).command")
         do {
             try FileManager.default.createDirectory(

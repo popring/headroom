@@ -8,8 +8,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-APP_NAME="AI Usage Bar"
-BUNDLE_ID="dev.popring.ai-usage-bar"
+APP_NAME="Headroom"
+BUNDLE_ID="dev.popring.headroom"
 VERSION="0.6.0"
 OUT="${1:-build}"
 APP="$OUT/$APP_NAME.app"
@@ -20,10 +20,10 @@ swift build -c release
 echo "==> Assembling $APP"
 rm -rf "$APP"
 mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
-cp .build/release/AIUsageBar "$APP/Contents/MacOS/AIUsageBar"
+cp .build/release/Headroom "$APP/Contents/MacOS/Headroom"
 
 # Icon: generate .icns on the fly from the PNG in docs/ (sips/iconutil ship with macOS).
-ICON_SRC="docs/ai-usage-bar-icon.png"
+ICON_SRC="docs/headroom-icon.png"
 if [ -f "$ICON_SRC" ]; then
     echo "==> Generating icon"
     ICONSET="$(mktemp -d)/AppIcon.iconset"
@@ -46,7 +46,7 @@ cat > "$APP/Contents/Info.plist" <<PLIST
     <key>CFBundleIdentifier</key>        <string>$BUNDLE_ID</string>
     <key>CFBundleVersion</key>           <string>$VERSION</string>
     <key>CFBundleShortVersionString</key><string>$VERSION</string>
-    <key>CFBundleExecutable</key>        <string>AIUsageBar</string>
+    <key>CFBundleExecutable</key>        <string>Headroom</string>
     <key>CFBundleIconFile</key>          <string>AppIcon</string>
     <key>CFBundlePackageType</key>       <string>APPL</string>
     <key>LSMinimumSystemVersion</key>    <string>13.0</string>

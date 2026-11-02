@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="docs/ai-usage-bar-icon.png" width="128" alt="AI Usage Bar 图标">
+  <img src="docs/headroom-icon.png" width="128" alt="Headroom 图标">
 </p>
 
-# AI Usage Bar
+# Headroom
 
 [English](README.md) | **中文**
 
 **你的所有 AI 订阅额度，抬头一眼就能看到。**
 
-订阅了 Claude Code、Codex，公司还发了个网关 key —— 每个额度都要跑去不同的地方查，快用完了也没人提醒你。AI Usage Bar 把它们全部收进 macOS 菜单栏：菜单栏常驻一个百分比，点开看全部明细，快到上限时主动弹通知。
+订阅了 Claude Code、Codex，公司还发了个网关 key —— 每个额度都要跑去不同的地方查，快用完了也没人提醒你。Headroom 把它们全部收进 macOS 菜单栏：菜单栏常驻一个百分比，点开看全部明细，快到上限时主动弹通知。
 
 <p align="center">
-  <img src="docs/menu.png" width="480" alt="AI Usage Bar 菜单截图">
+  <img src="docs/menu.png" width="480" alt="Headroom 菜单截图">
 </p>
 
 ## 能做什么
@@ -29,18 +29,18 @@
 需要 macOS 13+ 和 Swift 6（Command Line Tools 自带即可，**不需要完整 Xcode**）。
 
 ```bash
-./scripts/bundle.sh && cp -R "build/AI Usage Bar.app" ~/Applications/
+./scripts/bundle.sh && cp -R "build/Headroom.app" ~/Applications/
 ```
 
 也可以直接下 [Releases](../../releases) 里打包好的 `.app`。
 
-开机自启：系统设置 → 通用 → 登录项。
+开机自启：设置面板 →「开机自启」勾上（也可在系统设置 → 通用 → 登录项里管）。
 
 ## 配置
 
 菜单 → **设置…**（⌘,）打开配置面板：来源开关、LiteLLM 网关地址与 API Key、轮询间隔、菜单栏前缀、界面语言，以及**一键添加 Claude team**。保存立刻生效，不用重启。
 
-面板背后就是 `~/.config/ai-usage-bar/config.json`（尊重 `XDG_CONFIG_HOME`；首次运行自动生成，权限 `0600`），喜欢手改 JSON 依然可以，**保存即生效**（文件有监听，不用点任何东西）：
+面板背后就是 `~/.config/headroom/config.json`（尊重 `XDG_CONFIG_HOME`；首次运行自动生成，权限 `0600`），喜欢手改 JSON 依然可以，**保存即生效**（文件有监听，不用点任何东西）：
 
 ```json
 {
@@ -63,8 +63,8 @@
 配置就是一个 JSON 文件，保存即生效，所以把活交给 Claude Code / Codex 这类 agent 就行。把下面这段连同你的需求一起发给它：
 
 ```
-AI Usage Bar 的配置文件在 ~/.config/ai-usage-bar/config.json（尊重 XDG_CONFIG_HOME），字段见本 README「配置」节；
-直接改文件，改完自动生效，不用重启；跑 "/Applications/AI Usage Bar.app/Contents/MacOS/AIUsageBar" --dump 核对结果。
+Headroom 的配置文件在 ~/.config/headroom/config.json（尊重 XDG_CONFIG_HOME），字段见本 README「配置」节；
+直接改文件，改完自动生效，不用重启；跑 "/Applications/Headroom.app/Contents/MacOS/Headroom" --dump 核对结果。
 我要：<例：关掉 Codex，打开 LiteLLM，网关地址 https://…，key 在环境变量 LITELLM_API_KEY，轮询 10 分钟>
 ```
 
@@ -138,7 +138,7 @@ token 过期时（401）会自动跑一次 `codex doctor` —— 它用 refresh_
 | `~/.claude-swap-backup/cache/usage.json` 等 | claude-swap 自己的采集写入的各槽位用量与 org 元信息，**只读** | 展示 cswap 账号额度 |
 | `~/Library/Application Support/Claude/Local Storage/leveldb/*.log` | 只正则抓 `lastOrganization` 的 org uuid，其余字节不解析不存储 | 跟随功能（Desktop 侧）的实时信号 |
 | `~/.codex/auth.json` | **含 OAuth access token** | 仅用作请求 ChatGPT 的 `Authorization` 头 |
-| `~/.config/ai-usage-bar/config.json` | 你填的 LiteLLM 地址与 key | 请求你自己的网关 |
+| `~/.config/headroom/config.json` | 你填的 LiteLLM 地址与 key | 请求你自己的网关 |
 | shell 配置（如 `~/.zshrc`） | 只匹配 `LITELLM_BASE_URL` / `LITELLM_API_KEY` 两行 | 配置回退 |
 
 **发到哪**
@@ -155,8 +155,8 @@ token 过期时（401）会自动跑一次 `codex doctor` —— 它用 refresh_
 
 **写什么**
 
-- `~/.cache/ai-usage-bar/*.json` —— 只落用得上的用量数字，**不含任何 token**
-- `~/.config/ai-usage-bar/config.json` —— 首次运行生成模板，权限 `0600`；已存在但权限过松时启动会收紧
+- `~/.cache/headroom/*.json` —— 只落用得上的用量数字，**不含任何 token**
+- `~/.config/headroom/config.json` —— 首次运行生成模板，权限 `0600`；已存在但权限过松时启动会收紧
 
 **不做的事**：不读浏览器数据、不上传任何东西、不改你的登录态（`codex doctor` 走官方刷新流程，和你自己敲一遍完全一样）。
 
@@ -186,12 +186,12 @@ struct FooProvider: UsageProvider {
 ## 调试
 
 ```bash
-swift run AIUsageBar --dump              # 不起 UI，只读本地
-swift run AIUsageBar --dump --refresh    # 先刷新再打印
+swift run Headroom --dump              # 不起 UI，只读本地
+swift run Headroom --dump --refresh    # 先刷新再打印
 ```
 
-截图 / 测试可以用 `AI_USAGE_BAR_HOME=<目录>` 把所有本地读取整体重定向到一个假家目录，
-再配 `AI_USAGE_BAR_DEMO=1` 禁掉全部网络刷新，喂假数据跑 UI。
+截图 / 测试可以用 `HEADROOM_HOME=<目录>` 把所有本地读取整体重定向到一个假家目录，
+再配 `HEADROOM_DEMO=1` 禁掉全部网络刷新，喂假数据跑 UI。
 
 ## 已知限制
 
@@ -202,7 +202,7 @@ swift run AIUsageBar --dump --refresh    # 先刷新再打印
 ## 反馈
 
 用出问题、有想支持的新来源、或者任何建议 —— 欢迎开
-[Issue](https://github.com/popring/ai-usage-bar/issues)。附上 `swift run AIUsageBar --dump` 的输出（记得抹掉邮箱等敏感信息）能让问题定位快很多。
+[Issue](https://github.com/popring/headroom/issues)。附上 `swift run Headroom --dump` 的输出（记得抹掉邮箱等敏感信息）能让问题定位快很多。
 
 觉得好用的话，顺手点个 ⭐ **Star** —— 这是让这个项目继续迭代的最好方式。
 

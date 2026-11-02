@@ -1,17 +1,17 @@
 <p align="center">
-  <img src="docs/ai-usage-bar-icon.png" width="128" alt="AI Usage Bar icon">
+  <img src="docs/headroom-icon.png" width="128" alt="Headroom icon">
 </p>
 
-# AI Usage Bar
+# Headroom
 
 **English** | [中文](README.zh-CN.md)
 
 **All your AI subscription quotas, one glance away.**
 
-You subscribe to Claude Code and Codex, and your company hands you a gateway key on top — every quota lives in a different place, and nothing warns you before you hit the ceiling. AI Usage Bar pulls them all into the macOS menu bar: a percentage always in sight, full details one click away, and a notification before you run dry.
+You subscribe to Claude Code and Codex, and your company hands you a gateway key on top — every quota lives in a different place, and nothing warns you before you hit the ceiling. Headroom pulls them all into the macOS menu bar: a percentage always in sight, full details one click away, and a notification before you run dry.
 
 <p align="center">
-  <img src="docs/menu.png" width="480" alt="AI Usage Bar menu screenshot">
+  <img src="docs/menu.png" width="480" alt="Headroom menu screenshot">
 </p>
 
 ## Features
@@ -29,18 +29,18 @@ You subscribe to Claude Code and Codex, and your company hands you a gateway key
 Requires macOS 13+ and Swift 6 (Command Line Tools is enough — **no full Xcode needed**).
 
 ```bash
-./scripts/bundle.sh && cp -R "build/AI Usage Bar.app" ~/Applications/
+./scripts/bundle.sh && cp -R "build/Headroom.app" ~/Applications/
 ```
 
 Or grab a prebuilt `.app` from [Releases](../../releases).
 
-Launch at login: System Settings → General → Login Items.
+Launch at login: Settings panel → Startup (or System Settings → General → Login Items).
 
 ## Configuration
 
 Menu → **Settings…** (⌘,) opens the panel: source toggles, LiteLLM gateway URL and API key, poll interval, menu bar prefix, UI language, and **one-click Add Claude Team**. Changes apply immediately, no restart.
 
-Behind the panel sits `~/.config/ai-usage-bar/config.json` (respects `XDG_CONFIG_HOME`; auto-generated on first run with `0600` permissions). Hand-editing works too — **changes apply on save** (the file is watched; nothing to click):
+Behind the panel sits `~/.config/headroom/config.json` (respects `XDG_CONFIG_HOME`; auto-generated on first run with `0600` permissions). Hand-editing works too — **changes apply on save** (the file is watched; nothing to click):
 
 ```json
 {
@@ -63,8 +63,8 @@ Set `enabled` to `false` to hide a source entirely (it won't even be refreshed).
 The config is one JSON file that applies on save, so hand the job to Claude Code / Codex or any agent. Send it this along with what you want:
 
 ```
-AI Usage Bar's config lives at ~/.config/ai-usage-bar/config.json (respects XDG_CONFIG_HOME); fields are in the README's "Configuration" section.
-Edit the file directly; it applies automatically, no restart. Verify with: "/Applications/AI Usage Bar.app/Contents/MacOS/AIUsageBar" --dump
+Headroom's config lives at ~/.config/headroom/config.json (respects XDG_CONFIG_HOME); fields are in the README's "Configuration" section.
+Edit the file directly; it applies automatically, no restart. Verify with: "/Applications/Headroom.app/Contents/MacOS/Headroom" --dump
 I want: <e.g. disable Codex, enable LiteLLM at https://…, key from env LITELLM_API_KEY, poll every 10 minutes>
 ```
 
@@ -138,7 +138,7 @@ This tool touches your credentials, so the boundaries are spelled out for easy a
 | `~/.claude-swap-backup/cache/usage.json` etc. | Per-slot usage and org metadata written by claude-swap's own collector, **read-only** | Show cswap account quota |
 | `~/Library/Application Support/Claude/Local Storage/leveldb/*.log` | Regex-extracts only the `lastOrganization` org uuid; no other bytes parsed or stored | Real-time signal for the follow feature (Desktop side) |
 | `~/.codex/auth.json` | **Contains the OAuth access token** | Used solely as the `Authorization` header to ChatGPT |
-| `~/.config/ai-usage-bar/config.json` | The LiteLLM URL and key you entered | Query your own gateway |
+| `~/.config/headroom/config.json` | The LiteLLM URL and key you entered | Query your own gateway |
 | Shell config (e.g. `~/.zshrc`) | Matches only the `LITELLM_BASE_URL` / `LITELLM_API_KEY` lines | Config fallback |
 
 **Where it sends**
@@ -155,8 +155,8 @@ This tool touches your credentials, so the boundaries are spelled out for easy a
 
 **What it writes**
 
-- `~/.cache/ai-usage-bar/*.json` — only the usage numbers it needs, **never any token**
-- `~/.config/ai-usage-bar/config.json` — template generated on first run with `0600` permissions; loose permissions are tightened at startup
+- `~/.cache/headroom/*.json` — only the usage numbers it needs, **never any token**
+- `~/.config/headroom/config.json` — template generated on first run with `0600` permissions; loose permissions are tightened at startup
 
 **What it never does**: read browser data, upload anything, or modify your login state (`codex doctor` is the official refresh flow — identical to typing it yourself).
 
@@ -186,11 +186,11 @@ Push-style sources can return `.notSupported` from `refresh` — the UI labels i
 ## Debugging
 
 ```bash
-swift run AIUsageBar --dump              # no UI, local reads only
-swift run AIUsageBar --dump --refresh    # refresh first, then print
+swift run Headroom --dump              # no UI, local reads only
+swift run Headroom --dump --refresh    # refresh first, then print
 ```
 
-For screenshots / testing, `AI_USAGE_BAR_HOME=<dir>` redirects all local reads to a fake home directory, and `AI_USAGE_BAR_DEMO=1` disables all network refreshes — feed it fixture data and run the real UI.
+For screenshots / testing, `HEADROOM_HOME=<dir>` redirects all local reads to a fake home directory, and `HEADROOM_DEMO=1` disables all network refreshes — feed it fixture data and run the real UI.
 
 ## Known limitations
 
@@ -201,7 +201,7 @@ For screenshots / testing, `AI_USAGE_BAR_HOME=<dir>` redirects all local reads t
 ## Feedback
 
 Hit a bug, want a new source supported, or have any suggestion — open an
-[Issue](https://github.com/popring/ai-usage-bar/issues). Attaching the output of `swift run AIUsageBar --dump` (with emails and other sensitive bits redacted) speeds up diagnosis a lot.
+[Issue](https://github.com/popring/headroom/issues). Attaching the output of `swift run Headroom --dump` (with emails and other sensitive bits redacted) speeds up diagnosis a lot.
 
 If you find it useful, a ⭐ **Star** is the best way to keep this project moving.
 

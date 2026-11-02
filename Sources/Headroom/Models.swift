@@ -1,10 +1,10 @@
 import Foundation
 
-/// Root dir for all local file reads. The `AI_USAGE_BAR_HOME` env var redirects it
+/// Root dir for all local file reads. The `HEADROOM_HOME` env var redirects it
 /// wholesale — used for tests and demo screenshots (fake data);
 /// `homeDirectoryForCurrentUser` ignores $HOME.
 enum AppHome {
-    static let url: URL = ProcessInfo.processInfo.environment["AI_USAGE_BAR_HOME"]
+    static let url: URL = ProcessInfo.processInfo.environment["HEADROOM_HOME"]
         .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
         ?? FileManager.default.homeDirectoryForCurrentUser
 }

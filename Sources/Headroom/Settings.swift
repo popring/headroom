@@ -2,7 +2,7 @@ import Foundation
 
 /// User configuration.
 ///
-/// Location: `~/.config/ai-usage-bar/config.json`. First run writes an annotated
+/// Location: `~/.config/headroom/config.json`. First run writes an annotated
 /// template the user edits directly — no code changes, no recompiling.
 ///
 /// Anything person- or company-specific (gateway URL, API keys, which sources to
@@ -31,7 +31,7 @@ struct Settings {
         let base = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"]
             .flatMap { $0.isEmpty ? nil : URL(fileURLWithPath: $0) }
             ?? AppHome.url.appendingPathComponent(".config")
-        return base.appendingPathComponent("ai-usage-bar/config.json")
+        return base.appendingPathComponent("headroom/config.json")
     }()
 
     // MARK: - Loading
@@ -219,5 +219,27 @@ struct Settings {
               perms.int16Value & 0o077 != 0            // group/other has any permission
         else { return }
         try? fm.setAttributes([.posixPermissions: 0o600], ofItemAtPath: path.path)
+    }
+
+    /// One-time carry-over from the pre-rename "AI Usage Bar" (≤ v0.6.0): config/cache
+    /// dirs and the UserDefaults the old bundle ID owned. Must run before anything reads them.
+    /// ponytail: drop once nobody upgrades from ≤ v0.6.0.
+    static func migrateFromLegacyName() {
+        let fm = FileManager.default
+        let configDir = path.deletingLastPathComponent()
+        let cacheBase = AppHome.url.appendingPathComponent(".cache")
+        let moves = [
+            (configDir.deletingLastPathComponent().appendingPathComponent("ai-usage-bar"), configDir),
+            (cacheBase.appendingPathComponent("ai-usage-bar"), cacheBase.appendingPathComponent("headroom")),
+        ]
+        for (old, new) in moves where fm.fileExists(atPath: old.path) && !fm.fileExists(atPath: new.path) {
+            try? fm.moveItem(at: old, to: new)
+        }
+
+        guard let old = UserDefaults(suiteName: "dev.popring.ai-usage-bar") else { return }
+        for key in ["pinnedAccountKey", "followDesktopTeam", "quotaAlertedKeys"]
+        where UserDefaults.standard.object(forKey: key) == nil {
+            if let value = old.object(forKey: key) { UserDefaults.standard.set(value, forKey: key) }
+        }
     }
 }

@@ -73,7 +73,7 @@ enum ProviderRegistry {
         // Demo mode (fake data for screenshots/tests): send no requests, don't touch
         // the Keychain — otherwise real usage would overwrite the fake data and fake
         // credentials would render a screenful of refresh errors.
-        if ProcessInfo.processInfo.environment["AI_USAGE_BAR_DEMO"] != nil {
+        if ProcessInfo.processInfo.environment["HEADROOM_DEMO"] != nil {
             completion([:]); return
         }
 
