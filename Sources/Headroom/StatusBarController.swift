@@ -376,6 +376,18 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         header.isEnabled = true
         menu.addItem(header)
 
+        // cswap slots can become the CLI's active account; the follow logic picks up the
+        // switch from sequence.json, so nothing else to update here.
+        if account.providerID == "claude-swap", !account.isLiveSwapSlot {
+            let item = NSMenuItem(title: L("   ⇄ 切到此账号（CLI）", "   ⇄ Switch CLI to this account"),
+                                  action: #selector(switchSlotClicked(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = account.localID
+            item.toolTip = L("等同于 cswap switch \(account.localID)；新开的 claude 会话用这个号",
+                             "Same as cswap switch \(account.localID); new claude sessions use this account")
+            menu.addItem(item)
+        }
+
         if let error = account.error {
             menu.addItem(info("   \(error)", size: 11))
             addRefreshIssue(for: account)
@@ -492,6 +504,23 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             NSWorkspace.shared.open(file)
         } catch {
             NSSound.beep()
+        }
+    }
+
+    @objc private func switchSlotClicked(_ sender: NSMenuItem) {
+        guard let slot = sender.representedObject as? String else { return }
+        DispatchQueue.global(qos: .userInitiated).async {
+            let ok = CLI.run(["cswap", "switch", slot], timeout: 30)
+            guard !ok else { return }
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = L("切换失败", "Switch Failed")
+                alert.informativeText = L("在终端跑 cswap switch \(slot) 看具体原因",
+                                          "Run cswap switch \(slot) in a terminal to see why")
+                NSApp.activate(ignoringOtherApps: true)
+                alert.runModal()
+            }
         }
     }
 
